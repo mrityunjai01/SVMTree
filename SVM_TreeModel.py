@@ -1,13 +1,9 @@
-import pulp as p
 import time
 import numpy as np
 import scipy as sp
 import matplotlib.pyplot as plt
 from scipy.optimize import linprog
 import math
-from cvxopt import matrix,solvers
-from cvxopt.modeling import op
-from cvxopt.modeling import variable
 import pandas as pd
 
 class node:
@@ -23,7 +19,7 @@ def solveLPP(A,B,c):
 def solLPP(X,Y):
     k = np.sum(np.where(Y == 0,1,0))
     m = np.sum(np.where(Y == 1,1,0))
-    n,numf = X.shape
+    n, numf = X.shape
 
     A = np.zeros((n,2*numf+2*n))
     B = np.zeros(n)
@@ -89,7 +85,7 @@ def solve(X,Y):
     print(nc3,nc4)
 
     if(nc3 > 0):
-        qw = np.sum(np.where(Y==Yans,Y,0))
+        qw = int(np.sum(np.where(Y==Yans,Y,0)))
         YA = np.zeros(n-qw)
         X_new = np.zeros((n-qw,X.shape[1]))
         i = 0
@@ -112,7 +108,7 @@ def solve(X,Y):
 
 
     if(nc4 > 0):
-        qw = np.sum(np.where(Y == Yans,Y,1))
+        qw = int(np.sum(np.where(Y == Yans,Y,1)))
         YB = np.zeros(qw)
         X_new = np.zeros((qw,X.shape[1]))
         i = 0
@@ -132,18 +128,17 @@ def solve(X,Y):
                 j = j+1
             i = i+1
         r1.right = solve(X_new,YB)
-    
+
     return r1
+if __name__ == '__main__':
+    dftrain = pd.read_csv('data/heart-statlog_csv.csv')
+    Xtrain = dftrain.iloc[:,:-1].to_numpy()
+    Xtrain = np.c_[(np.ones(Xtrain.shape[0]),Xtrain)]
+    ytrain = dftrain.iloc[:,-1].to_numpy()
+    ytrain = np.where(ytrain=='present',1,0)
+    Xtra = Xtrain[:230]
+    Ytra = ytrain[:230]
+    Xtest = Xtrain[230:]
+    Ytest = ytrain[230:]
 
-
-dftrain = pd.read_csv('heart-statlog_csv.csv')
-Xtrain = dftrain.iloc[:,:-1].to_numpy()
-Xtrain = np.c_[(np.ones(Xtrain.shape[0]),Xtrain)]
-ytrain = dftrain.iloc[:,-1].to_numpy()
-ytrain = np.where(ytrain=='present',1,0)
-Xtra = Xtrain[:230]
-Ytra = ytrain[:230]
-Xtest = Xtrain[230:]
-Ytest = ytrain[230:]
-
-root = solve(Xtra,Ytra)
+    root = solve(Xtra,Ytra)
