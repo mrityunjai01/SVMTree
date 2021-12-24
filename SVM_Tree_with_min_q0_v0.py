@@ -14,7 +14,7 @@ class node:
     def __init__(self,left=None,right=None,weight=None):
         self.left = left
         self.right = right
-        self.weight = weight
+
         self.left_present = False
         self.right_present = False
     def predict(self, X):
@@ -35,7 +35,7 @@ class node:
             raise Exception("prediction error, cant predict.")
         preds = np.where(product<0, -1, 1)
         return preds
-    def solveSVM(self, X_, Y):
+    def solveMaximumMargin(self, X_, Y):
 
         n, d = X_.shape
         self.feature_size = d
@@ -79,7 +79,7 @@ def iterate(A, B, C, n, d):
         return
     return ans.x
 
-def solLPP1(X,Y):
+def solveLP1(X,Y):
     n, d = X.shape
 
     A = np.zeros((n, d + 1 + n))
@@ -126,11 +126,11 @@ def solve(X,Y):
     if (verbose):
         print(f"Neuron received, {X.shape[0]} samples")
     try:
-        w, b = solLPP1(X,Y)
+        w, b = solveLP1(X,Y)
 
     except Exception as e:
         print(e)
-        print("Error in first lp function, solLPP1")
+        print("Error in first lp function, solveLP1")
         quit()
 
     n = X.shape[0]
@@ -206,7 +206,7 @@ def solve(X,Y):
     try:
         if (verbose):
             print(f"putting in, {X_.shape[0]} samples for svm")
-        r.solveSVM(X_, Y_)
+        r.solveMaximumMargin(X_, Y_)
     except Exception as e:
         print(e)
         print("There's an error, terminating.")
