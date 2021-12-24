@@ -93,7 +93,7 @@ def solveLP1(X,Y):
     A[:, -n:] = -np.eye(n)
     A[:, 1:-n] = -(X * Y)
     A[:, :1] = - Y
-    max_iterations = 30
+    max_iterations = 15
     i = 0
     def coeff_map(x, epsilon = EPSILON):
         # return x
@@ -111,14 +111,15 @@ def solveLP1(X,Y):
         if (np.sum(q) > 0):
             C[-n:] = np.array([coeff_map(x) for x in q])
         else:
-            print(f"solved the LP")
+            print(f"solved the LP perfectly, i.e. no outliers")
             return x[1:(d+1)], x[:1]
             break
 
         i += 1
         if (i==max_iterations):
-            print("max iterations reached, cant find the solution.")
-            raise Exception("max iterations reached")
+            print("max iterations reached, still not perfect, some outliers")
+            return x[1:(d+1)], x[:1]
+
 
 
 @timing
@@ -302,8 +303,8 @@ if __name__ == '__main__':
         Ytra1 = ytrain[0 : r*i]
         Xtra2 = Xtrain[r*(i+1) : ]
         Ytra2 = ytrain[r*(i+1) : ]
-        Xtra = np.concatenate((Xtra1, Xtra2),axis=0)
-        Ytra = np.concatenate((Ytra1, Ytra2),axis=0)
+        Xtra = np.concatenate((Xtra1, Xtra2), axis=0)
+        Ytra = np.concatenate((Ytra1, Ytra2), axis=0)
         Xtest = Xtrain[r*i : r*(i+1)]
         Ytest = ytrain[r*i : r*(i+1)]
 
