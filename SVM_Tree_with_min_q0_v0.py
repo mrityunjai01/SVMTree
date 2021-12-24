@@ -30,7 +30,8 @@ class node:
         try:
             product = np.matmul(X_, self.w) + self.b
 
-        except:
+        except Exception as e:
+            print(e)
             print("prediction error, cant predict.")
             raise Exception("prediction error, cant predict.")
         preds = np.where(product<0, -1, 1)
@@ -63,7 +64,11 @@ class node:
         else:
             self.w = self.ans.x[1:(d+1)] + self.ans.x[(d+1):]
             self.b = self.ans.x[0]
-
+    def getHyperPlaneFromTwoPoints(self, x1, x2):
+        assert(x1.shape[0]==x2.shape[0])
+        d = x1.shape[0]
+        self.w = x2 - x1
+        self.b = - np.dot(self.w , (0.5 * (x1 + x2)))
 
 
 def iterate(A, B, C, n, d):
@@ -102,7 +107,8 @@ def solveLP1(X,Y):
     while (i < max_iterations):
         try:
             x = iterate(A, B, C, n, d)
-        except:
+        except Exception as e:
+            print(e)
             print(f"cant solve LP at iteration {i}")
             break
 
@@ -137,10 +143,8 @@ def solve(X,Y):
     n = X.shape[0]
 
     i = 0
-    nc1 = 0
-    nc2 = 0
-    nc3 = 0
-    nc4 = 0
+    nc1 = nc2 = nc3 = nc4 = 0
+    last_c1_sample = last_c2_sample = last_c3_sample = last_c4_sample = 0
     c3_mask = [False for i in range (n)]
     c4_mask = [False for i in range (n)]
     Xa = np.zeros((n, 1), dtype=float)
@@ -152,19 +156,22 @@ def solve(X,Y):
             nc3 += 1
             Xa[i][0] = 1
             c4_mask[i] = True
-
+            last_c3_sample = i
         elif(Y_pred_01[i] == 1 and Y[i] == -1):
             nc4 += 1
             Xb[i][0] = 1
             c3_mask[i] = True
+            last_c4_sample = i
         elif(Y_pred_01[i] == -1 and Y[i] == -1):
             nc1 += 1
             c4_mask[i] = True
             c3_mask[i] = True
+            last_c1_sample = i
         else:
             nc2 += 1
             c4_mask[i] = True
             c3_mask[i] = True
+            last_c2_sample = i
 
         i += 1
     if (verbose):
@@ -183,10 +190,10 @@ def solve(X,Y):
         r.left_present = True
     elif (nc3 > 0):
         print("c2 is empty")
-        # X_ = X_[c3_mask, :]
-        #
-        # Y_ = Y[c3_mask]
-        # n = X_.shape[0]
+        x1 = X[last_c1_sample]
+        x2 = X[last_c3_sample]
+        r.left = node()
+        r.left.getHyperPlaneFromTwoPoints(x1, x2)
         if (verbose):
             print (f"c2 is empty, new size for svm = {n}")
 
@@ -195,7 +202,11 @@ def solve(X,Y):
         X_ = np.hstack((X_, Xb))
         r.right_present = True
     elif (nc4 > 0):
+        x1 = X[last_c4_sample]
+        x2 = X[last_c2_sample]
         print("c1 is empty")
+        r.right = node()
+        r.right.getHyperPlaneFromTwoPoints(x1, x2)
         # X_ = X_[c4_mask, :]
         # Y_ = Y[c4_mask]
         # n = X_.shape[0]
