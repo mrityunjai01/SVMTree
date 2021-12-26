@@ -67,7 +67,7 @@ class node:
     def getHyperPlaneFromTwoPoints(self, x1, x2):
         assert(x1.shape[0]==x2.shape[0])
         d = x1.shape[0]
-        self.w = x2 - x1
+        self.w = 2 * (x2 - x1) / (np.linalg.norm(x2 - x1) ** 2)
         self.b = - np.dot(self.w , (0.5 * (x1 + x2)))
 
 
