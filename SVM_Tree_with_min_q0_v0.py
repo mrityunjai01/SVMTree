@@ -32,7 +32,7 @@ class node:
 
         except Exception as e:
             print(e)
-            print("prediction error, cant predict.")
+
             raise Exception("prediction error, cant predict.")
         preds = np.where(product<0, -1, 1)
         return preds
@@ -322,7 +322,8 @@ if __name__ == '__main__':
         root = solve(Xtra, Ytra)
         try:
             prediction = root.predict(Xtest)
-        except:
+        except Exception as e:
+            print(e)
             print(f"cant get prediction for fold {i}, moving ahead")
             continue
         acc = np.sum(np.where(Ytest == prediction, 1, 0))/ Ytest.shape[0]
