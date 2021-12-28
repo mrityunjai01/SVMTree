@@ -67,10 +67,11 @@ class node:
     def getHyperPlaneFromTwoPoints(self, x1, x2):
         assert(x1.shape[0]==x2.shape[0])
         d = x1.shape[0]
-        self.w = 2 * (x2 - x1) / (np.linalg.norm(x2 - x1) ** 2)
+        self.w = 3 * (x2 - x1) / (np.linalg.norm(x1 - x2) ** 2)
         self.b = - np.dot(self.w , (0.5 * (x1 + x2)))
-
-
+        assert(np.dot(x1, self.w) + self.b <= -1)
+        assert(np.dot(x2, self.w) + self.b >= 1)
+        print("assertions satisfied")
 def iterate(A, B, C, n, d):
 
     bounds = [(0, None) for i in range (d + 1 + n)]
@@ -113,7 +114,7 @@ def solveLP1(X,Y):
             break
 
         q = x[-n:]
-        print(f"The sum of q_i's at iteration {i} is {np.sum(q)}, number of nonzero q_i's is {np.count_nonzero(q)}")
+        # print(f"The sum of q_i's at iteration {i} is {np.sum(q)}, number of nonzero q_i's is {np.count_nonzero(q)}")
         if (np.sum(q) > 0):
             C[-n:] = np.array([coeff_map(x) for x in q])
         else:
@@ -129,16 +130,17 @@ def solveLP1(X,Y):
 
 
 @timing
-def solve(X,Y):
+def solve(X, Y, w=None, b=None):
     if (verbose):
         print(f"Neuron received, {X.shape[0]} samples")
-    try:
-        w, b = solveLP1(X,Y)
+    if (w is None):
+        try:
+            w, b = solveLP1(X,Y)
 
-    except Exception as e:
-        print(e)
-        print("Error in first lp function, solveLP1")
-        quit()
+        except Exception as e:
+            print(e)
+            print("Error in first lp function, solveLP1")
+            quit()
 
     n = X.shape[0]
 
@@ -189,14 +191,12 @@ def solve(X,Y):
         X_ = np.hstack((X_, Xa))
         r.left_present = True
     elif (nc3 > 0):
-        print("c2 is empty")
+        print("c2 is empty, getting perpendicular bisecting hyperplane")
         x1 = X[last_c1_sample]
         x2 = X[last_c3_sample]
-        r.left = node()
-        r.left.getHyperPlaneFromTwoPoints(x1, x2)
-        if (verbose):
-            print (f"c2 is empty, new size for svm = {n}")
 
+        r.getHyperPlaneFromTwoPoints(x1, x2)
+        return solve(X, Y, r.w, r.b)
 
     if (nc4 > 0 and nc1 > 0):
         X_ = np.hstack((X_, Xb))
@@ -204,14 +204,10 @@ def solve(X,Y):
     elif (nc4 > 0):
         x1 = X[last_c4_sample]
         x2 = X[last_c2_sample]
-        print("c1 is empty")
-        r.right = node()
-        r.right.getHyperPlaneFromTwoPoints(x1, x2)
-        # X_ = X_[c4_mask, :]
-        # Y_ = Y[c4_mask]
-        # n = X_.shape[0]
-        if (verbose):
-            print (f"c1 is empty, new size for svm = {n}")
+        print("c2 is empty, getting perpendicular bisecting hyperplane")
+
+        r.getHyperPlaneFromTwoPoints(x1, x2)
+        return solve(X, Y, r.w, r.b)
 
 
 
