@@ -9,7 +9,7 @@ import pandas as pd
 from utils.measure_time import timing
 LP_METHOD = "highs-ds"
 EPSILON = 1e-12
-verbose = False
+verbose = True
 class node:
     def __init__(self,left=None,right=None,weight=None):
         self.left = left
@@ -67,11 +67,11 @@ class node:
     def getHyperPlaneFromTwoPoints(self, x1, x2):
         assert(x1.shape[0]==x2.shape[0])
         d = x1.shape[0]
-        self.w = 2 * (x2 - x1) / (np.linalg.norm(x1 - x2) ** 2)
+        self.w = (2 + 1e-8) * (x2 - x1) / (np.linalg.norm(x1 - x2) ** 2)
         self.b = - np.dot(self.w , (0.5 * (x1 + x2)))
         assert(np.dot(x1, self.w) + self.b <= -1)
         assert(np.dot(x2, self.w) + self.b >= 1)
-        print("assertions satisfied")
+        # print("assertions satisfied")
 def iterate(A, B, C, n, d):
 
     bounds = [(0, None) for i in range (d + 1 + n)]
@@ -118,19 +118,20 @@ def solveLP1(X,Y):
         if (np.sum(q) > 0):
             C[-n:] = np.array([coeff_map(x) for x in q])
         else:
-            print(f"solved the LP perfectly, i.e. no outliers")
+            # print(f"solved the LP perfectly, i.e. no outliers")
             return x[1:(d+1)], x[:1]
             break
 
         i += 1
         if (i==max_iterations):
-            print("max iterations reached, still not perfect, some outliers")
+            # print("max iterations reached, still not perfect, some outliers")
             return x[1:(d+1)], x[:1]
 
 
 
 @timing
 def solve(X, Y, w=None, b=None):
+    print("New  neuron made")
     if (verbose):
         print(f"Neuron received, {X.shape[0]} samples")
     if (w is None):
@@ -141,6 +142,8 @@ def solve(X, Y, w=None, b=None):
             print(e)
             print("Error in first lp function, solveLP1")
             quit()
+    else:
+        print("Neuron made to do 2 point hyperplane thing")
 
     n = X.shape[0]
 
@@ -192,6 +195,7 @@ def solve(X, Y, w=None, b=None):
         r.left_present = True
     elif (nc3 > 0):
         print("c2 is empty, getting perpendicular bisecting hyperplane")
+
         x1 = X[last_c1_sample]
         x2 = X[last_c3_sample]
 
@@ -204,7 +208,7 @@ def solve(X, Y, w=None, b=None):
     elif (nc4 > 0):
         x1 = X[last_c4_sample]
         x2 = X[last_c2_sample]
-        print("c2 is empty, getting perpendicular bisecting hyperplane")
+        print("c1 is empty, getting perpendicular bisecting hyperplane")
 
         r.getHyperPlaneFromTwoPoints(x1, x2)
         return solve(X, Y, r.w, r.b)
@@ -283,11 +287,6 @@ def solve(X, Y, w=None, b=None):
 
 
 
-
-# def transform_data(df):
-#     df["y"] = df["diagnosis"].apply(lambda x: 1 if (x=="M") else 0)
-#     df.drop(columns= ["diagnosis", "id"], inplace = True)
-#     return df
 def transform_data(df):
     df["y"] = df["class"].apply(lambda x: 1 if (x=="present") else -1)
     df.drop(columns = ["class"], inplace=True)
@@ -302,7 +301,7 @@ if __name__ == '__main__':
     ytrain = dftrain.iloc[:,-1].to_numpy()
     n = Xtrain.shape[0]
     i = 0
-    k = 10
+    k = 1
     r = int(n/10)
     sum = 0
     while(i < k):
