@@ -258,7 +258,7 @@ def solve(X, Y, w=None, b=None):
         size_of_right_neuron = nc2 + nc3 + nc4
         qw = int(np.sum(np.where(Y==0, 1, 0) * np.where(Y_pred_01==0, 1, 0)))
         if (verbose):
-            print(f"creating left neuron with {size_of_right_neuron} out of {n} samples")
+            print(f"creating right neuron with {size_of_right_neuron} out of {n} samples")
         YB = np.zeros(size_of_right_neuron)
         X_new = np.zeros((size_of_right_neuron, X.shape[1]))
         i = 0
